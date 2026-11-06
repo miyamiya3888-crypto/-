@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生物基礎 過去問演習・模擬試験システム</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --error: #dc2626;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .timer-badge {
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .question-text {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .option-item:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .option-item input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .text-input-container textarea {
+            width: 100%;
+            height: 90px;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #334155;
+            white-space: pre-line;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-sub);
+        }
+
+        .nav-btn:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <header>
+        <h1>生物基礎 過去問演習模試（ランダム版）</h1>
+        <div class="timer-badge" id="timer">残り時間 30:00</div>
+    </header>
+
+    <div id="quiz-container">
+        <div class="card">
+            <div class="question-header">
+                <span id="q-category">大問1</span>
+                <span id="q-progress">問 1 / 10</span>
+            </div>
+            <div class="question-text" id="q-text">
+                問題文がここに読み込まれます。
+            </div>
+
+            <div class="options-list" id="options-container"></div>
+
+            <div class="text-input-container" id="text-input-container" style="display: none;">
+                <textarea id="user-text-answer" placeholder="ここに記述解答を入力してください"></textarea>
+            </div>
+
+            <button class="btn-primary" id="submit-btn" onclick="checkAnswer()">解答を決定・採点</button>
+
+            <div class="result-box" id="result-box">
+                <strong id="result-status" style="font-size: 1.1rem;">正解！</strong>
+                <div style="margin-top: 8px;">正答率: <span id="stat-accuracy" style="font-weight:bold;">--%</span></div>
+                <div class="explanation" id="result-explanation">
+                    ここに解説が表示されます。
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prev-btn" onclick="prevQuestion()" style="display:none;">前の問題へ</button>
+            <button class="nav-btn" id="next-btn" onclick="nextQuestion()" style="display:none;">次の問題へ進む</button>
+        </div>
+    </div>
+
+    <div class="card summary-card" id="summary-container" style="display: none;">
+        <h2>模試終了・お疲れ様でした！</h2>
+        <p>あなたの総合得点</p>
+        <div class="score-display" id="final-score">0 / 10問正解</div>
+        <p id="final-comment" style="color: var(--text-sub); margin-bottom: 25px;">繰り返し解くことで実力がつきます！</p>
+        <button class="btn-primary" onclick="restartQuiz()">もう一度挑戦する（問題がシャッフルされます）</button>
+    </div>
+</div>
+
+<script>
+    const baseQuestionsData = [
+        {
+            category: "大問1：生物の体内環境",
+            type: "choice",
+            text: "問 下線部(a)に関して、ヘモグロビンが血液の状態によって酸素との結合のしやすさが変化する意義に関する記述として最も適当なものを、次の①～④の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① 呼吸が活発なからだの組織に、より多くの酸素を供給することができる。",
+                "② 激しい運動をするときに備えて、筋肉中に酸素を保持することができる。",
+                "③ あまり多くの酸素を必要としないからだの組織から、酸素を回収することができる。",
+                "④ 二酸化炭素濃度が上昇したからだの組織で、二酸化炭素濃度を低下させることができる。"
+            ],
+            answer: 0,
+            accuracy: "74%",
+            explanation: "正解：①\n【解説】組織では呼吸によって二酸化炭素が増え、pHが低下するため、ヘモグロビンは酸素を解離しやすくなります。これにより代謝が活発な組織へ効率よく酸素を供給できます。"
+        },
+        {
+            category: "大問1：生物の体内環境",
+            type: "choice",
+            text: "問 ヒトの血糖濃度の調節における自律神経系と内分泌系に関する記述として誤っているものを、次の①～⑤の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① 肝臓の細胞には、インスリンの受容体とグルカゴンの受容体が存在する。",
+                "② 血糖濃度の変化は、間脳の視床下部とすい臓のランゲルハンス島の細胞で感知できる。",
+                "③ 糖質コルチコイドは、タンパク質からのグリコーゲンの合成を促進する。",
+                "④ 副交感神経はインスリンの分泌を促進し、交感神経はグルカゴンの分泌を促進する。",
+                "⑤ 副腎皮質刺激ホルモンは、アドレナリンの分泌を促進する。"
+            ],
+            answer: 4,
+            accuracy: "42%",
+            explanation: "正解：⑤\n【解説】副腎皮質刺激ホルモンは糖質コルチコイドの分泌を促します。アドレナリンは交感神経の刺激を受けて副腎髄質から分泌されるため誤りです。"
+        },
+        {
+            category: "大問2：細胞・DNA・細胞周期",
+            type: "choice",
+            text: "問 組織液に関して、健康なヒトの組織液に見られないものの組み合わせとして最も適当なものを、次の①～⑥の中から一つ選び、記号で答えなさい。\n\n[選択肢候補：赤血球、タンパク質、グルカゴン、アミノ酸]",
+            options: [
+                "① 赤血球・タンパク質",
+                "② 赤血球・グルカゴン",
+                "③ タンパク質・アミノ酸",
+                "④ アミノ酸・グルカゴン",
+                "⑤ 赤血球のみ",
+                "⑥ タンパク質のみ"
+            ],
+            answer: 0,
+            accuracy: "61%",
+            explanation: "正解：①\n【解説】血しょうや組織液には、分子の大きな血球や血漿タンパク質は毛細血管の壁を通過できないため、ほとんど含まれません。"
+        },
+        {
+            category: "大問2：細胞・DNA・細胞周期",
+            type: "choice",
+            text: "問 組織液とリンパ液に関する記述として誤っているものを、次の①～⑤の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① 毛細血管と静脈には、筋肉が備わっていない。",
+                "② 左心室は、筋肉が発達している。",
+                "③ 血液中の有形成分のうち、血液1mm³あたりの数が最も多いものは赤血球である。",
+                "④ 血液中の有形成分のうち、大きさが最も小さいものは血小板である。",
+                "⑤ 血漿の液体成分である血しょうは、血液の重さの約55%を占めている。"
+            ],
+            answer: 0,
+            accuracy: "53%",
+            explanation: "正解：①\n【解説】動脈や静脈の壁には平滑筋が含まれており、血流の調節や血圧維持に関わっています。"
+        },
+        {
+            category: "大問3：遺伝子とそのはたらき",
+            type: "choice",
+            text: "問 免疫系に関する記述として最も適当なものを、次の①～⑤の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① インフルエンザ予防接種を1回受けると、生涯インフルエンザにかかることはない。",
+                "② 自己からの物質に対しては、過度は免疫が起きないことが、予防接種に利用されている。",
+                "③ ほかの動物でつくった抗体を注射して、へビ毒などの毒素の中和を期待することが、予防接種に利用されている。",
+                "④ 不活性化した病原体を毒性を弱めて体内に注射したものを、ワクチンとして注射して免疫を獲得させる方法である。"
+            ],
+            answer: 3,
+            accuracy: "81%",
+            explanation: "正解：④\n【解説】ワクチンは不活性化や毒性を弱めた病原体を接種し、免疫記憶をつくらせて発症を防ぐ方法（能動免疫）です。"
+        },
+        {
+            category: "大問3：生態系とバイオーム",
+            type: "choice",
+            text: "問 日本のバイオームに関する記述として最も適当なものを、次の①～⑥の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① 針葉樹林は、北半球のより高緯度に多く分布する、構成する樹種の種類が最も多い。",
+                "② 照葉樹林では冬季に落葉し、春に芽吹く落葉広葉樹が優占する。",
+                "③ アフリカ北部などの乾燥地域には、乾燥に耐えることができる草原やサバンナが分布する。",
+                "④ 雨緑樹林は、年間を通じて多雨であり最終的な極相林を形成する。"
+            ],
+            answer: 2,
+            accuracy: "68%",
+            explanation: "正解：③\n【解説】針葉樹林は樹種が非常に少なく、照葉樹林は常緑広葉樹です。乾燥地域には草原やサバンナが分布します。"
+        },
+        {
+            category: "記述・論述トレーニング",
+            type: "text",
+            text: "問 下線部に関して、病原体に感染した細胞では、病原体に由来する情報が細胞膜上に提示された状態になっている。細胞性免疫においてはじたらくキラーT細胞が、病原体に感染した細胞を排除するしくみについて、「特異的」の語を用いて「病原体に感染した細胞を、」に続くように20字以内で説明しなさい。",
+            answerText: "特異的に認識して破壊する。",
+            accuracy: "39%",
+            explanation: "【模範解答】特異的に認識して破壊する。\n【解説】キラーT細胞は受容体により、感染細胞表面の抗原を特異的に認識して直接攻撃し破壊します。"
+        },
+        {
+            category: "計算問題演習",
+            type: "choice",
+            text: "問 ヒトの血液の重さは、体重の約1/13とされている。体重が60kgの健康なヒトの血液に含まれているグルコース量（g）として最も適当なものを①～⑤から一つ選びなさい。ただし、血液1mLは1gとする。",
+            options: [
+                "① 約2g",
+                "② 約5g",
+                "③ 約40g",
+                "④ 約50g",
+                "⑤ 約100g"
+            ],
+            answer: 1,
+            accuracy: "45%",
+            explanation: "正解：②（約5g）\n【解説】全血液量 = 60000g ÷ 13 ≒ 4600mL。血糖値は約100mg/100mL（0.1g/100mL）なので、4600 × 0.001 ＝ 4.6g ≒ 約5gとなります。"
+        },
+        {
+            category: "総合演習",
+            type: "choice",
+            text: "問 リンパ管の特徴に関する記述として誤っているものを、次の①～④の中から一つ選び、記号で答えなさい。",
+            options: [
+                "① リンパ管には、ところどころに逆流を防ぐ弁が存在する。",
+                "② リンパ管は、周辺の筋肉の収縮や動脈の拍動などによってリンパ液を運ぶ。",
+                "③ リンパ液の最終的な流出先は、鎖骨の下にある静脈である。",
+                "④ リンパ管は、心臓をポンプとして全身にリンパ液を循環させている。"
+            ],
+            answer: 3,
+            accuracy: "72%",
+            explanation: "正解：④\n【解説】リンパ系には心臓のようなポンプ器官はなく、筋肉の動きや呼吸運動などによって流れます。"
+        },
+        {
+            category: "総合演習",
+            type: "choice",
+            text: "問 活性化されて増殖し、形質細胞（抗体産生細胞）へと分化するリンパ球の名称を何というか。最も適当なものを答えなさい。",
+            options: [
+                "① 骨髄",
+                "② 胸腺",
+                "③ B細胞",
+                "④ キラーT細胞"
+            ],
+            answer: 2,
+            accuracy: "85%",
+            explanation: "正解：③（B細胞）\n【解説】B細胞は抗原の刺激を受けると増殖し、抗体を産生する形質細胞へと分化します。"
+        }
+    ];
+
+    let questionsData = [];
+    let currentIdx = 0;
+    let userAnswers = [];
+    let timeLeft = 1800;
+    let timerInterval;
+
+    // 配列をランダムにシャッフルする関数 (Fisher-Yates算法)
+    function shuffleArray(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initQuiz() {
+        // 起動時に問題を毎回ランダムに並び替える
+        questionsData = shuffleArray(baseQuestionsData);
+        currentIdx = 0;
+        userAnswers = new Array(questionsData.length).fill(null);
+        timeLeft = 1800;
+
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showSummary();
+                return;
+            }
+            timeLeft--;
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            document.getElementById('timer').innerText = `残り時間 ${m}:${s < 10 ? '0' : ''}${s}`;
+        }, 1000);
+
+        document.getElementById('summary-container').style.display = 'none';
+        document.getElementById('quiz-container').style.display = 'block';
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = questionsData[currentIdx];
+        document.getElementById('q-category').innerText = q.category;
+        document.getElementById('q-progress').innerText = `問 ${currentIdx + 1} / ${questionsData.length}`;
+        document.getElementById('q-text').innerText = q.text;
+
+        const optionsContainer = document.getElementById('options-container');
+        const textContainer = document.getElementById('text-input-container');
+        const resultBox = document.getElementById('result-box');
+        resultBox.classList.remove('show');
+
+        if (q.type === 'choice') {
+            optionsContainer.style.display = 'flex';
+            textContainer.style.display = 'none';
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const isChecked = userAnswers[currentIdx] === idx ? 'checked' : '';
+                optionsContainer.innerHTML += `
+                    <label class="option-item">
+                        <input type="radio" name="quiz-opt" value="${idx}" ${isChecked} onchange="saveChoice(${idx})">
+                        <span>${opt}</span>
+                    </label>
+                `;
+            });
+        } else {
+            optionsContainer.style.display = 'none';
+            textContainer.style.display = 'block';
+            document.getElementById('user-text-answer').value = userAnswers[currentIdx] || '';
+        }
+
+        document.getElementById('prev-btn').style.display = currentIdx > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').style.display = currentIdx < questionsData.length - 1 ? 'block' : 'none';
+    }
+
+    function saveChoice(idx) {
+        userAnswers[currentIdx] = idx;
+    }
+
+    function checkAnswer() {
+        const q = questionsData[currentIdx];
+        let isCorrect = false;
+
+        if (q.type === 'choice') {
+            const selected = userAnswers[currentIdx];
+            if (selected === null) {
+                alert("選択肢を一つ選んでください。");
+                return;
+            }
+            isCorrect = (selected === q.answer);
+        } else {
+            const val = document.getElementById('user-text-answer').value.trim();
+            if (!val) {
+                alert("解答を入力してください。");
+                return;
+            }
+            userAnswers[currentIdx] = val;
+            isCorrect = val.includes("特異的") && (val.includes("認識") || val.includes("破壊"));
+        }
+
+        const resultBox = document.getElementById('result-box');
+        const statusEl = document.getElementById('result-status');
+        const accuracyEl = document.getElementById('stat-accuracy');
+        const explEl = document.getElementById('result-explanation');
+
+        if (isCorrect) {
+            statusEl.innerText = "🎉 正解です！";
+            statusEl.style.color = "var(--success)";
+        } else {
+            statusEl.innerText = "❌ 残念、不正解です";
+            statusEl.style.color = "var(--error)";
+        }
+
+        accuracyEl.innerText = q.accuracy;
+        explEl.innerText = q.explanation;
+        resultBox.classList.add('show');
+    }
+
+    function nextQuestion() {
+        if (currentIdx < questionsData.length - 1) {
+            currentIdx++;
+            loadQuestion();
+        } else {
+            showSummary();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIdx > 0) {
+            currentIdx--;
+            loadQuestion();
+        }
+    }
+
+    function showSummary() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('summary-container').style.display = 'block';
+
+        let correctCount = 0;
+        questionsData.forEach((q, idx) => {
+            if (q.type === 'choice' && userAnswers[idx] === q.answer) {
+                correctCount++;
+            } else if (q.type === 'text' && userAnswers[idx] && userAnswers[idx].includes("特異的")) {
+                correctCount++;
+            }
+        });
+        document.getElementById('final-score').innerText = `${correctCount} / ${questionsData.length}問正解`;
+    }
+
+    function restartQuiz() {
+        initQuiz();
+    }
+
+    // 初回起動
+    initQuiz();
+</script>
+
+</body>
+</html>
